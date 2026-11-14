@@ -28,3 +28,6 @@ secrets.properties
 .env.*
 !.env.example
 
+
+# Android release signing credentials
+keystore.properties
