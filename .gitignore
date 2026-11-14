@@ -1,0 +1,30 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+**/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+!docs/**
+
+# Kotlin and IDE caches
+.kotlin/
+
+# Signing keys and certificates
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+
+# Secrets and environment configuration
+secrets.properties
+.env
+.env.*
+!.env.example
+
