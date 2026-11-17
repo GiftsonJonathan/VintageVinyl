@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The music library: MediaStore tracks merged with imported files, indexed for browsing and
@@ -47,7 +48,7 @@ class LibraryRepository(
         override fun onChange(selfChange: Boolean) {
             debounceJob?.cancel()
             debounceJob = scope.launch {
-                delay(1_500)
+                delay(1_500.milliseconds)
                 refresh()
             }
         }

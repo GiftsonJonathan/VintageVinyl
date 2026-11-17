@@ -1,6 +1,7 @@
 package com.vintagevinyl
 
 import android.app.Application
+import androidx.media3.common.util.UnstableApi
 import com.vintagevinyl.data.ArtworkRepository
 import com.vintagevinyl.data.ImportedTracksStore
 import com.vintagevinyl.data.LibraryRepository
@@ -13,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 /** Manual dependency graph: one instance of each repository for the lifetime of the process. */
+@UnstableApi
 class AppContainer(app: Application) {
 
     /** Background work that must outlive any screen. */

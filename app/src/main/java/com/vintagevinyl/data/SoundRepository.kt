@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Single source of truth for the vintage sound: the live [VintageSettings] (observed by the
@@ -45,7 +46,7 @@ class SoundRepository(
         .combine(_settings) { custom, _ -> PresetBook.all(custom) }
         .stateIn(scope, SharingStarted.Eagerly, PresetBook.all(emptyList()))
 
-    /** Id of the preset equal to the current settings, or null when they have been tweaked. */
+    /** I'd of the preset equal to the current settings, or null when they have been tweaked. */
     val activePresetId: StateFlow<String?> = _settings
         .combine(_custom) { s, custom -> PresetBook.matching(s, custom)?.id }
         .stateIn(scope, SharingStarted.Eagerly, VintageSettings.DEFAULT.let { PresetBook.matching(it, emptyList())?.id })
@@ -56,7 +57,7 @@ class SoundRepository(
             _custom.value = SettingsCodec.decodePresets(prefs[Keys.CUSTOM_PRESETS])
             _settings.value = SettingsCodec.decode(prefs[Keys.SOUND_SETTINGS])
             // Persist later changes (the load above is the first emission, hence drop(1)).
-            _settings.debounce(400).drop(1).collect { s ->
+            _settings.debounce(400.milliseconds).drop(1).collect { s ->
                 dataStore.edit { it[Keys.SOUND_SETTINGS] = SettingsCodec.encode(s) }
             }
         }

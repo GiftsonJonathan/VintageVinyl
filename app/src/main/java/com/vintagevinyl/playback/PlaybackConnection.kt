@@ -2,13 +2,14 @@ package com.vintagevinyl.playback
 
 import android.content.ComponentName
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.core.content.ContextCompat
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The UI's handle on the player. Wraps a [MediaController] connected to
@@ -34,6 +36,7 @@ import kotlinx.coroutines.flow.update
  * The playback position is *not* part of the state flow (it would re-render the screen several
  * times a second even when nothing visible changed). Screens that show it collect [positionFlow].
  */
+@UnstableApi
 class PlaybackConnection(private val context: Context) {
 
     private val _state = MutableStateFlow(PlayerState())
@@ -131,7 +134,7 @@ class PlaybackConnection(private val context: Context) {
     fun positionFlow(): Flow<Long> = flow {
         while (true) {
             controller?.let { emit(it.currentPosition.coerceAtLeast(0)) }
-            delay(200)
+            delay(200.milliseconds)
         }
     }
 
@@ -221,7 +224,7 @@ class PlaybackConnection(private val context: Context) {
     fun clearQueue() = run { it.clearMediaItems() }
 
     private fun toMediaItem(t: Track): MediaItem {
-        val uri = Uri.parse(t.uri)
+        val uri = t.uri.toUri()
         return MediaItem.Builder()
             .setMediaId(t.id)
             .setUri(uri)

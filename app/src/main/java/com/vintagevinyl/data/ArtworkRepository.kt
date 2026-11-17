@@ -5,10 +5,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
-import android.net.Uri
 import android.os.Build
 import android.util.LruCache
 import android.util.Size
+import androidx.core.net.toUri
 import com.vintagevinyl.domain.model.Track
 import com.vintagevinyl.domain.model.TrackSource
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +44,7 @@ class ArtworkRepository(private val context: Context) {
     private fun decode(track: Track, size: Int): Bitmap? = try {
         when {
             track.source == TrackSource.MEDIA_STORE && Build.VERSION.SDK_INT >= 29 && track.mediaStoreId != null ->
-                context.contentResolver.loadThumbnail(Uri.parse(track.uri), Size(size, size), null)
+                context.contentResolver.loadThumbnail(track.uri.toUri(), Size(size, size), null)
             track.source == TrackSource.MEDIA_STORE && Build.VERSION.SDK_INT < 29 ->
                 legacyAlbumArt(track.albumId, size) ?: embedded(track, size)
             else -> embedded(track, size)
@@ -57,7 +57,7 @@ class ArtworkRepository(private val context: Context) {
     private fun embedded(track: Track, size: Int): Bitmap? {
         val retriever = MediaMetadataRetriever()
         return try {
-            retriever.setDataSource(context, Uri.parse(track.uri))
+            retriever.setDataSource(context, track.uri.toUri())
             val bytes = retriever.embeddedPicture ?: return null
             decodeSampled(bytes, size)
         } catch (_: Exception) {
@@ -68,7 +68,7 @@ class ArtworkRepository(private val context: Context) {
     }
 
     private fun legacyAlbumArt(albumId: Long, size: Int): Bitmap? {
-        val uri = ContentUris.withAppendedId(Uri.parse("content://media/external/audio/albumart"), albumId)
+        val uri = ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), albumId)
         return try {
             context.contentResolver.openInputStream(uri)?.use { input -> decodeSampled(input.readBytes(), size) }
         } catch (_: Exception) {

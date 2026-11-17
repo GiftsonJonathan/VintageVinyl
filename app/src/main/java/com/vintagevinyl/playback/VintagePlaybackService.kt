@@ -1,10 +1,13 @@
-@file:OptIn(UnstableApi::class)
+
 
 package com.vintagevinyl.playback
 
 import android.app.PendingIntent
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.provider.MediaStore
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -39,6 +42,8 @@ import kotlinx.coroutines.launch
  * The [VintageAudioProcessor] is installed in the player's `DefaultAudioSink`, and a coroutine
  * forwards every change of the user's sound settings to it.
  */
+
+@UnstableApi
 class VintagePlaybackService : MediaSessionService() {
 
     private var session: MediaSession? = null
@@ -47,10 +52,8 @@ class VintagePlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        val container = (application as VintageVinylApp).container
-
         // Live settings -> DSP engine. (Collects on the main thread; the hand-over is a volatile write.)
-        scope.launch { container.sound.settings.collect { processor.updateSettings(it) } }
+        scope.launch { (application as VintageVinylApp).container.sound.settings.collect { processor.updateSettings(it) } }
 
         val renderers = object : DefaultRenderersFactory(this) {
             override fun buildAudioSink(
@@ -126,17 +129,35 @@ class VintagePlaybackService : MediaSessionService() {
      * Controllers send media items without a playable URI (for security); the URI travels in the
      * request metadata and is restored here.
      */
-    private class Callback : MediaSession.Callback {
+    private inner class Callback : MediaSession.Callback {
+        override fun onConnect(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+        ): MediaSession.ConnectionResult =
+            if (controller.packageName == this@VintagePlaybackService.packageName || controller.isTrusted) {
+                super.onConnect(mediaSession, controller)
+            }
+        else MediaSession.ConnectionResult.reject()
+
         override fun onAddMediaItems(
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo,
-            mediaItems: MutableList<MediaItem>,
+            mediaItems: MutableList<MediaItem>
         ): ListenableFuture<MutableList<MediaItem>> {
-            val resolved = mediaItems.map { item ->
+            val resolved = mediaItems.mapNotNull { item ->
                 val uri = item.requestMetadata.mediaUri ?: item.localConfiguration?.uri
-                if (uri != null) item.buildUpon().setUri(uri).build() else item
+                if (uri?.isPlayableByApp() == true) item.buildUpon().setUri(uri).build()
+                else null
             }.toMutableList()
             return Futures.immediateFuture(resolved)
+        }
+
+        private fun Uri.isPlayableByApp(): Boolean {
+            if  (scheme != ContentResolver.SCHEME_CONTENT) return false
+            if (authority == MediaStore.AUTHORITY) return true
+            return contentResolver.persistedUriPermissions.any { permission ->
+                permission.isReadPermission && permission.uri == this
+            }
         }
     }
 }

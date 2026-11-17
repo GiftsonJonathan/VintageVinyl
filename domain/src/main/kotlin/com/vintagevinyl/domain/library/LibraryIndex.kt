@@ -48,7 +48,7 @@ class LibraryIndex private constructor(
 
         private val DIACRITICS = Regex("\\p{InCombiningDiacriticalMarks}+")
 
-        /** Lower-cases and strips accents, so "Beyoncé" matches "beyonce". */
+        /** Lower-cases and strips accents, so "Beyoncé" matches "Beyoncé". */
         fun normalize(s: String): String =
             DIACRITICS.replace(Normalizer.normalize(s, Normalizer.Form.NFD), "").lowercase().trim()
 

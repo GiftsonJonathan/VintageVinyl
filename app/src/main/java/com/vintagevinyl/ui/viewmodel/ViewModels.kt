@@ -1,6 +1,7 @@
 package com.vintagevinyl.ui.viewmodel
 
 import android.net.Uri
+import androidx.media3.common.util.UnstableApi
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Playback state and transport commands for the turntable and now-playing screens. */
+@UnstableApi
 class PlayerViewModel(
     private val playback: PlaybackConnection,
     library: LibraryRepository,
@@ -80,6 +82,7 @@ class PlayerViewModel(
 }
 
 /** Library browsing, search, import and playlists. */
+@UnstableApi
 class LibraryViewModel(
     private val library: LibraryRepository,
     private val playlistRepo: PlaylistRepository,
@@ -151,6 +154,7 @@ class LibraryViewModel(
 }
 
 /** The sound panel: live settings, presets and their persistence. */
+@UnstableApi
 class SoundViewModel(private val sound: SoundRepository) : ViewModel() {
     val settings: StateFlow<VintageSettings> = sound.settings
     val presets: StateFlow<List<VintagePreset>> = sound.presets
@@ -162,7 +166,8 @@ class SoundViewModel(private val sound: SoundRepository) : ViewModel() {
     fun deleteCustomPreset(id: String) = sound.deleteCustomPreset(id)
 }
 
-/** Builds the view models from the hand-written [AppContainer] (no Hilt: see VintageVinylApp). */
+/** Builds the view models from the handwritten [AppContainer] (no Hilt: see VintageVinylApp). */
+@UnstableApi
 class AppViewModelFactory(private val c: AppContainer) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T = when {
